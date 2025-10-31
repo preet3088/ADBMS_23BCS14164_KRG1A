@@ -197,20 +197,21 @@ $$;
 SELECT * FROM students;
 
 ---------------------------WRONG DATA TYPE SCENARIO-------------------------
-BEGIN;  -- start transaction
-
-SAVEPOINT sp1;
-INSERT INTO students(name, age, class) VALUES ('Aarav',16,8);
-
-SAVEPOINT sp2;
+DO $$
 BEGIN
-    INSERT INTO students(name, age, class) VALUES ('Rahul','wrong',9);  -- fails
-EXCEPTION WHEN OTHERS THEN
-    RAISE NOTICE 'Failed to insert Rahul, rolling back to savepoint sp2';
-    ROLLBACK TO SAVEPOINT sp2;
+    SAVEPOINT sp1;
+    INSERT INTO students(name, age, class) VALUES ('Aarav', 16, 8);
+
+    SAVEPOINT sp2;
+    BEGIN
+        INSERT INTO students(name, age, class) VALUES ('Rahul', 'wrong', 9); -- fails
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Failed to insert Rahul, rolling back to savepoint sp2';
+        ROLLBACK TO SAVEPOINT sp2;
+    END;
+
+    INSERT INTO students(name, age, class) VALUES ('Sita', 17, 10);
+
+    COMMIT;
 END;
-
--- Next insert
-INSERT INTO students(name, age, class) VALUES ('Sita',17,10);
-
-COMMIT;  -- commit all successful inserts
+$$;
